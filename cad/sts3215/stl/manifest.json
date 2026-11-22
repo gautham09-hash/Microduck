@@ -1,0 +1,19 @@
+{
+ "trunk": "trunk",
+ "neck": "neck",
+ "neck_top": "neck_top",
+ "head_yaw_link": "head_yaw_link",
+ "head": "head",
+ "left_hip_yaw_bracket": "left_hip_yaw_link",
+ "left_hip_yaw_cap": "left_hip_yaw_link",
+ "left_hip_cross": "left_hip_cross",
+ "left_thigh": "left_thigh",
+ "left_shin": "left_shin",
+ "left_foot": "left_foot",
+ "right_hip_yaw_bracket": "right_hip_yaw_link",
+ "right_hip_yaw_cap": "right_hip_yaw_link",
+ "right_hip_cross": "right_hip_cross",
+ "right_thigh": "right_thigh",
+ "right_shin": "right_shin",
+ "right_foot": "right_foot"
+}

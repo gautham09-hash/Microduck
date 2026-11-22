@@ -10,6 +10,7 @@
 | `original_xl330/microduck_combined*.stl` | Original XL330 robot, assembled (meters, Z-up). `_rollers` has roller feet | STL mesh |
 | `servos/HD-1910-C001-20260902.stp` | Feetech HD-1910 servo | STEP |
 | `servos/XL330.STEP` | Dynamixel XL330 servo | STEP |
+| `servos/STS3215_03a.step` | Feetech STS3215 servo (mm). Output shaft along +Z at (12.5, 0); horn on +Z, idler on −Z | STEP |
 
 None of the printed parts have an editable (parametric) source. Every part is a mesh, so changing one means
 remodelling it in a CAD tool using the STL as a reference, not editing the STL directly.
@@ -66,10 +67,12 @@ The STS3215 is much larger and heavier than the servos this structure was design
 Every servo pocket, horn interface and screw pattern changes. The link lengths and the overall size probably have
 to grow too, and servo mass alone goes from about 0.35 kg to about 0.8 kg. Steps:
 
-1. Add an STS3215 STEP model to `servos/`.
-2. Decide whether to keep the 25 cm proportions or scale the robot up.
-3. Remodel the servo-holding parts (trunk, hips, legs, ankles, neck) in a parametric CAD tool, using the baseline STLs as reference.
-4. Export new STLs to `cad/sts3215/` and an assembly for the robot description.
+1. ~~Add an STS3215 STEP model to `servos/`.~~ Done: `servos/STS3215_03a.step`.
+2. ~~Decide whether to keep the 25 cm proportions or scale the robot up.~~ Scaled 1.3× (about 34 cm).
+3. ~~Remodel the servo-holding parts.~~ Skeleton v0 in [`sts3215/`](sts3215/README.md): fit-test geometry, collision-checked.
+4. ~~Export new STLs and a robot description.~~ STLs in `sts3215/stl/`, MuJoCo model in `../sim/sts3215/`.
+
+Still open: hardware fit test, head and trunk shells, electronics mounts. See [`sts3215/README.md`](sts3215/README.md).
 
 ## License
 
@@ -78,3 +81,6 @@ They are based on Pollen Robotics' Microduck 3D models (CC BY-NC-SA,
 https://github.com/pollen-robotics/microduck_rl), with HD1910 adaptations by JoyandAI
 (https://github.com/JoyandAI/OpenMicroDuck). Derivatives must keep this license and may not be used commercially.
 This project is not affiliated with or endorsed by Pollen Robotics.
+
+Exception: `servos/STS3215_03a.step` is from The Robot Studio's SO-ARM100
+(https://github.com/TheRobotStudio/SO-ARM100) and is licensed under Apache-2.0.

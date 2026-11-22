@@ -2,3 +2,4 @@ references/
 .venv/
 __pycache__/
 .DS_Store
+cad/sts3215/build/
