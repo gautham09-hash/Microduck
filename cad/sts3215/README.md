@@ -34,6 +34,14 @@ uv run python cad/sts3215/build_mjcf.py --servo 19kg
 uv run python sim/sts3215/smoke_test.py
 ```
 
+To look at the model, open the MuJoCo viewer. Use plain `python`, not `mjpython`, which crashes here on MuJoCo 4.0.1:
+
+```bash
+uv run python -m mujoco.viewer --mjcf=sim/sts3215/scene.xml
+```
+
+In the viewer's Simulation panel, set Key to 1 (`stand`), click Load key, then press Space to run.
+
 ## Parts (17)
 
 | Link | Parts | Holds |
