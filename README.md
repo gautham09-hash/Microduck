@@ -20,6 +20,7 @@ cad/
   README.md            part catalogue, joint chain, what has to change for the STS3215
 sim/
   sts3215/             MuJoCo model of the STS3215 robot (generated), smoke test
+rl/                    Isaac Lab training tasks for the STS3215 robot (see rl/README.md)
 pyproject.toml         Python env (uv): mujoco, trimesh, onshape-to-robot
 ```
 

@@ -30,6 +30,9 @@ uv run --with python-fcl python cad/sts3215/check_rom.py
 uv run python cad/sts3215/build_mjcf.py --servo 19kg
 ```
 
+That writes `robot.xml` (viewer and smoke test) and `robot_walk.xml` (training: soles-only collisions, no
+actuators). For training, also convert it to USD; see [`rl/README.md`](../../rl/README.md).
+
 ```bash
 uv run python sim/sts3215/smoke_test.py
 ```

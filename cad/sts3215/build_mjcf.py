@@ -1,7 +1,12 @@
 """Build the MuJoCo model of the STS3215 Microduck from layout.json and the exported part STLs.
 
-Writes sim/sts3215/robot.xml and sim/sts3215/scene.xml. Each body's mass, centre of mass and inertia come from
+Writes sim/sts3215/robot.xml + scene.xml (all parts collide with the floor, MuJoCo position actuators: for the
+viewer and smoke_test.py) and robot_walk.xml + scene_walk.xml (only the soles collide, no actuators, no joint
+damping: for training, where the trainer models the servos). Each body's mass, centre of mass and inertia come from
 its printed parts (mesh volume x PRINT_DENSITY), the servos it holds and the payload estimates in layout.json.
+
+Bodies use the original MicroDuck names (trunk_base, ankle_left, jaw_soft, ...) so training code written for that
+robot applies unchanged; MJCF_NAME maps them to the link names in layout.json.
 
 Servo model: position actuator with the force limited to the stall torque, and joint damping = stall torque / no-load
 speed, which gives the motor's torque-speed line. Armature and friction are starting values to be identified on a
@@ -34,6 +39,11 @@ STAND = dict(left_hip_yaw=0.0, left_hip_roll=-0.0873, left_hip_pitch=-0.4579, le
              neck_pitch=0.3491, head_pitch=0.3491, head_yaw=0.0, head_roll=0.0, right_hip_yaw=0.0,
              right_hip_roll=0.0873, right_hip_pitch=0.4579, right_knee=0.0049, right_ankle=-0.4530)
 JOINTS = list(STAND)
+TRUNK_ORIGIN = np.array([0.0, 0.0, 165.0])   # mm: trunk body frame (and IMU) at the zero pose
+MJCF_NAME = dict(trunk="trunk_base", left_hip_yaw_link="yaw2roll", left_hip_cross="hip_l", left_thigh="upper_leg_left",
+                 left_shin="leg", left_foot="ankle_left", right_hip_yaw_link="bearing_roll", right_hip_cross="hip_l_2",
+                 right_thigh="upper_leg_right", right_shin="leg_2", right_foot="ankle_right", neck="neck",
+                 neck_top="neck_pitch", head_yaw_link="yaw_roll_motion", head="jaw_soft")
 
 
 def mesh_mass(mesh, mass=None, density=None):
@@ -60,19 +70,21 @@ def combine(items):
     return M, com, I
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--servo", default="19kg", choices=list(LAYOUT["servo"]["variants"]))
-    args = ap.parse_args()
-    sv = LAYOUT["servo"]["variants"][args.servo]
-    damping = sv["stall_nm"] / sv["no_load_rad_s"]
+def anchor(links, name):
+    return TRUNK_ORIGIN if links[name]["parent"] is None else np.array(links[name]["anchor"], float)
+
+
+def build(sv, servo_name, walk):
+    """MjSpec of the robot. walk=True: soles-only collisions, no actuators/sensors, no joint damping."""
+    damping = 0.0 if walk else sv["stall_nm"] / sv["no_load_rad_s"]
     servo_mass = LAYOUT["servo"]["mass_g"] / 1000
     links = LAYOUT["links"]
     stl = HERE / "stl"
     servo_mesh = trimesh.load(stl / "sts3215.stl")
+    col = dict(contype=0, conaffinity=0) if walk else dict(contype=2, conaffinity=1)
 
     spec = mujoco.MjSpec()
-    spec.modelname = f"microduck_sts3215_{args.servo}"
+    spec.modelname = f"microduck_sts3215_{servo_name}" + ("_walk" if walk else "")
     spec.compiler.degree = False
     spec.meshdir = str(stl)
     spec.option.timestep = 0.002
@@ -84,14 +96,14 @@ def main():
     order = ["trunk"] + [k for k in links if k != "trunk"]
     for name in order:
         e = links[name]
-        a = np.array(e["anchor"], float)
+        a = anchor(links, name)
         if e["parent"] is None:
-            b = spec.worldbody.add_body(name=name, pos=[0, 0, 0])
+            b = spec.worldbody.add_body(name=MJCF_NAME[name], pos=a / 1000)
             b.add_freejoint(name="floating_base")
-            b.add_site(name="imu", pos=[0, 0, 0.165])
+            b.add_site(name="imu", pos=[0, 0, 0])
         else:
-            pa = np.array(links[e["parent"]]["anchor"], float)
-            b = bodies[e["parent"]].add_body(name=name, pos=(a - pa) / 1000)
+            pa = anchor(links, e["parent"])
+            b = bodies[e["parent"]].add_body(name=MJCF_NAME[name], pos=(a - pa) / 1000)
             lo, hi = np.radians(e["range_deg"])
             b.add_joint(name=e["joint"], type=mujoco.mjtJoint.mjJNT_HINGE, axis=e["axis"], range=[lo, hi],
                         damping=damping, armature=ARMATURE, frictionloss=FRICTION)
@@ -102,8 +114,8 @@ def main():
                 continue
             mesh = trimesh.load(stl / (part + ".stl"))
             items.append(mesh_mass(mesh, density=PRINT_DENSITY))
-            b.add_geom(name=part, type=mujoco.mjtGeom.mjGEOM_MESH, meshname=part, pos=-a / 1000,
-                       contype=2, conaffinity=1, group=1, rgba=[0.85, 0.55, 0.2, 1], mass=0)
+            b.add_geom(name=part, type=mujoco.mjtGeom.mjGEOM_MESH, meshname=part, pos=-a / 1000, group=1,
+                       rgba=[0.85, 0.55, 0.2, 1], mass=0, **col)
         for joint, s in LAYOUT["servos"].items():
             if s["link"] != name:
                 continue
@@ -114,8 +126,7 @@ def main():
             q = np.zeros(4)
             mujoco.mju_mat2Quat(q, T[:3, :3].flatten())
             b.add_geom(name="servo_" + joint, type=mujoco.mjtGeom.mjGEOM_MESH, meshname="sts3215",
-                       pos=(T[:3, 3] - a) / 1000, quat=q, contype=2, conaffinity=1, group=1,
-                       rgba=[0.15, 0.15, 0.15, 1], mass=0)
+                       pos=(T[:3, 3] - a) / 1000, quat=q, group=1, rgba=[0.15, 0.15, 0.15, 1], mass=0, **col)
         if "payload" in e:
             pl = e["payload"]
             items.append(box_mass(pl["mass_g"] / 1000, pl["com_mm"], pl["size_mm"]))
@@ -136,21 +147,23 @@ def main():
                          I[1, 2] * 1e-6]
         report.append((name, M))
 
-    for j in JOINTS:
-        act = spec.add_actuator(name=j, target=j, trntype=mujoco.mjtTrn.mjTRN_JOINT)
-        act.set_to_position(kp=KP)
-        act.forcelimited = True
-        act.forcerange = [-sv["stall_nm"], sv["stall_nm"]]
-    for typ, n in ((mujoco.mjtSensor.mjSENS_GYRO, "imu_gyro"), (mujoco.mjtSensor.mjSENS_ACCELEROMETER, "imu_acc"),
-                   (mujoco.mjtSensor.mjSENS_FRAMEQUAT, "imu_quat")):
-        spec.add_sensor(name=n, type=typ, objtype=mujoco.mjtObj.mjOBJ_SITE, objname="imu")
+    if not walk:
+        for j in JOINTS:
+            act = spec.add_actuator(name=j, target=j, trntype=mujoco.mjtTrn.mjTRN_JOINT)
+            act.set_to_position(kp=KP)
+            act.forcelimited = True
+            act.forcerange = [-sv["stall_nm"], sv["stall_nm"]]
+        for typ, n in ((mujoco.mjtSensor.mjSENS_GYRO, "imu_gyro"),
+                       (mujoco.mjtSensor.mjSENS_ACCELEROMETER, "imu_acc"),
+                       (mujoco.mjtSensor.mjSENS_FRAMEQUAT, "imu_quat")):
+            spec.add_sensor(name=n, type=typ, objtype=mujoco.mjtObj.mjOBJ_SITE, objname="imu")
 
     # keyframes: base height so the soles touch the floor
     model = spec.compile()
     data = mujoco.MjData(model)
     soles = [model.geom(f"{s}_foot_sole").id for s in ("left", "right")]
-
-    def keyed(pose):
+    heights = {}
+    for kname, pose in (("zero", {}), ("stand", STAND)):
         data.qpos[:] = model.qpos0
         for j, v in pose.items():
             data.qpos[model.joint(j).qposadr[0]] = v
@@ -158,18 +171,16 @@ def main():
         low = min(data.geom_xpos[g][2] - model.geom_size[g][2] for g in soles)
         q = data.qpos.copy()
         q[2] -= low
-        ctrl = np.array([pose.get(j, 0.0) for j in JOINTS])
-        return q, ctrl
+        heights[kname] = q[2]
+        if walk:
+            spec.add_key(name=kname, qpos=q)
+        else:
+            spec.add_key(name=kname, qpos=q, ctrl=np.array([pose.get(j, 0.0) for j in JOINTS]))
+    return spec, report, damping, heights
 
-    for kname, pose in (("zero", {}), ("stand", STAND)):
-        q, ctrl = keyed(pose)
-        spec.add_key(name=kname, qpos=q, ctrl=ctrl)
 
-    OUT.mkdir(parents=True, exist_ok=True)
-    xml = spec.to_xml().replace(f'meshdir="{stl}"', 'meshdir="../../cad/sts3215/stl"')
-    (OUT / "robot.xml").write_text(xml)
-    (OUT / "scene.xml").write_text(f"""<mujoco model="microduck_sts3215 scene">
-  <include file="robot.xml"/>
+SCENE = """<mujoco model="microduck_sts3215 scene">
+  <include file="{robot}"/>
   <visual><headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3"/><global azimuth="135" elevation="-20" offwidth="1280" offheight="960"/></visual>
   <asset>
     <texture type="2d" name="grid" builtin="checker" rgb1="0.25 0.3 0.35" rgb2="0.2 0.25 0.3" width="300" height="300"/>
@@ -180,12 +191,27 @@ def main():
     <geom name="floor" type="plane" size="0 0 0.05" material="grid" contype="1" conaffinity="1"/>
   </worldbody>
 </mujoco>
-""")
-    m = mujoco.MjModel.from_xml_path(str(OUT / "scene.xml"))
+"""
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--servo", default="19kg", choices=list(LAYOUT["servo"]["variants"]))
+    args = ap.parse_args()
+    sv = LAYOUT["servo"]["variants"][args.servo]
+    stl = HERE / "stl"
+    OUT.mkdir(parents=True, exist_ok=True)
+    for walk, robot, scene in ((False, "robot.xml", "scene.xml"), (True, "robot_walk.xml", "scene_walk.xml")):
+        spec, report, damping, heights = build(sv, args.servo, walk)
+        xml = spec.to_xml().replace(f'meshdir="{stl}"', 'meshdir="../../cad/sts3215/stl"')
+        (OUT / robot).write_text(xml)
+        (OUT / scene).write_text(SCENE.format(robot=robot))
+        m = mujoco.MjModel.from_xml_path(str(OUT / scene))
+        print(f"{OUT / scene}: {m.nbody - 1} bodies, {m.njnt} joints, {m.nu} actuators, servo {args.servo} "
+              f"(stall {sv['stall_nm']} N m, joint damping {damping:.2f} N m s/rad), "
+              f"trunk height at stand {heights['stand'] * 1000:.1f} mm")
     total = sum(r[1] for r in report)
-    print(f"{OUT / 'scene.xml'}: {m.nbody - 1} bodies, {m.njnt} joints, {m.nu} actuators, servo {args.servo} "
-          f"(stall {sv['stall_nm']} N m, damping {damping:.2f} N m s/rad)")
-    print("mass (g): " + ", ".join(f"{n} {M * 1000:.0f}" for n, M in report) + f" | total {total * 1000:.0f}")
+    print("mass (g): " + ", ".join(f"{MJCF_NAME[n]} {M * 1000:.0f}" for n, M in report) + f" | total {total * 1000:.0f}")
 
 
 if __name__ == "__main__":

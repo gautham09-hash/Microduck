@@ -744,13 +744,15 @@
   "variants": {
    "19kg": {
     "stall_nm": 1.91,
-    "no_load_rad_s": 4.7,
-    "volts": 7.4
+    "no_load_rad_s": 5.45,
+    "volts": 7.4,
+    "source": "ST-3215-C001 box label: 19.5 kg.cm, 0.192 s/60 deg at 7.4 V"
    },
    "30kg": {
     "stall_nm": 2.94,
     "no_load_rad_s": 4.7,
-    "volts": 12.0
+    "volts": 12.0,
+    "source": "estimate, not measured"
    }
   }
  }

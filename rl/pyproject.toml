@@ -1,0 +1,18 @@
+[project]
+name = "microduck-sts3215-rl"
+version = "0.1.0"
+description = "Isaac Lab tasks for the STS3215 Microduck"
+requires-python = ">=3.12"
+# Isaac Lab, Newton and RSL-RL come from the Isaac Lab environment this package is installed into.
+dependencies = []
+
+# Isaac Lab's train.py imports every package registered here, so the tasks show up without a custom script.
+[project.entry-points."isaaclab.tasks"]
+microduck_sts3215 = "microduck_sts3215"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["microduck_sts3215*"]

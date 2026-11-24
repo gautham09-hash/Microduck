@@ -49,7 +49,7 @@ def crouch_pose(m, stand, names, drop):
 
 
 def tilt_deg(d, m):
-    R = d.xmat[m.body("trunk").id].reshape(3, 3)
+    R = d.xmat[m.body("trunk_base").id].reshape(3, 3)
     return float(np.degrees(np.arccos(np.clip(R[2, 2], -1, 1))))
 
 
@@ -65,7 +65,7 @@ def run(m, ctrl_fn, secs, drop=0.0):
         if d.time > 0.3:
             peak = np.maximum(peak, np.abs(d.actuator_force) / stall)
             tilt = max(tilt, tilt_deg(d, m))
-            zs.append(d.xipos[m.body("trunk").id][2])
+            zs.append(d.xipos[m.body("trunk_base").id][2])
     return d, peak, tilt, np.array(zs)
 
 
@@ -78,7 +78,7 @@ def main():
     stand = m.key("stand").ctrl.copy()
     crouch = crouch_pose(m, stand, names, CROUCH_DROP)
     print("crouch pose (deg):", {n: round(float(np.degrees(v)), 1) for n, v in zip(names, crouch) if n.startswith("left")})
-    print(m.opt.timestep, m.nu, "actuators", m.body_subtreemass[m.body("trunk").id].round(3), "kg")
+    print(m.opt.timestep, m.nu, "actuators", m.body_subtreemass[m.body("trunk_base").id].round(3), "kg")
     ok = True
 
     def report(label, d, peak, tilt, zs, need_up=True):

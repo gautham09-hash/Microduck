@@ -3,3 +3,6 @@ references/
 __pycache__/
 .DS_Store
 cad/sts3215/build/
+sim/sts3215/usd/
+*.egg-info/
+logs/
