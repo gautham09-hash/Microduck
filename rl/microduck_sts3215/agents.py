@@ -10,5 +10,6 @@ class Sts3215PPORunnerCfg(MicroDuckSymmetricPPORunnerCfg):
     def __post_init__(self):
         super().__post_init__()
         self.experiment_name = "microduck_sts3215_flat"
+        self.run_name = "bam"
         self.max_iterations = 8000
         self.save_interval = 250

@@ -1,8 +1,9 @@
 """Build the MuJoCo model of the STS3215 Microduck from layout.json and the exported part STLs.
 
 Writes sim/sts3215/robot.xml + scene.xml (all parts collide with the floor, MuJoCo position actuators: for the
-viewer and smoke_test.py) and robot_walk.xml + scene_walk.xml (only the soles collide, no actuators, no joint
-damping: for training, where the trainer models the servos). Each body's mass, centre of mass and inertia come from
+viewer and smoke_test.py) and robot_walk.xml + scene_walk.xml (for training, where the trainer models the servos:
+no actuators, no joint damping or friction, the identified servo armature, a passive gearbox-play hinge behind each
+servo, the soles colliding with the floor, and the thighs colliding with the trunk and hip yaw servos). Each body's mass, centre of mass and inertia come from
 its printed parts (mesh volume x PRINT_DENSITY), the servos it holds and the payload estimates in layout.json.
 
 Bodies use the original MicroDuck names (trunk_base, ankle_left, jaw_soft, ...) so training code written for that
@@ -34,6 +35,9 @@ ARMATURE = 0.02           # kg m^2, reflected rotor inertia (estimate)
 FRICTION = 0.05           # N m (estimate)
 KP = 18.0                 # N m / rad
 SOLE_T = 3.0              # mm, sole pad under the foot plate
+# walk model: thighs (and the servos they hold) against the trunk and hip yaw servos, which the policy can hit
+SELF_COLLIDE = {"left_thigh": "thigh", "right_thigh": "thigh", "trunk": "trunk"}
+SELF_COL = {"thigh": dict(contype=4, conaffinity=8), "trunk": dict(contype=8, conaffinity=4)}
 # default standing pose (rad), left leg / neck / head / right leg, same order as the joints below
 STAND = dict(left_hip_yaw=0.0, left_hip_roll=-0.0873, left_hip_pitch=-0.4579, left_knee=-0.0049, left_ankle=0.4530,
              neck_pitch=0.3491, head_pitch=0.3491, head_yaw=0.0, head_roll=0.0, right_hip_yaw=0.0,
@@ -75,13 +79,22 @@ def anchor(links, name):
 
 
 def build(sv, servo_name, walk):
-    """MjSpec of the robot. walk=True: soles-only collisions, no actuators/sensors, no joint damping."""
+    """MjSpec of the robot. walk=True: the training model (see the module docstring)."""
     damping = 0.0 if walk else sv["stall_nm"] / sv["no_load_rad_s"]
+    bam = LAYOUT["servo"]["bam"]
+    play = np.radians(LAYOUT["servo"]["backlash_deg"])
     servo_mass = LAYOUT["servo"]["mass_g"] / 1000
     links = LAYOUT["links"]
     stl = HERE / "stl"
     servo_mesh = trimesh.load(stl / "sts3215.stl")
     col = dict(contype=0, conaffinity=0) if walk else dict(contype=2, conaffinity=1)
+
+    def geom_col(link, servo):
+        """Collision bits of a part or servo geom: in the walk model only the SELF_COLLIDE pairs collide."""
+        group = SELF_COLLIDE.get(link)
+        if not walk or group is None or (group == "trunk" and servo is not None and not servo.endswith("hip_yaw")):
+            return col
+        return SELF_COL[group]
 
     spec = mujoco.MjSpec()
     spec.modelname = f"microduck_sts3215_{servo_name}" + ("_walk" if walk else "")
@@ -103,10 +116,18 @@ def build(sv, servo_name, walk):
             b.add_site(name="imu", pos=[0, 0, 0])
         else:
             pa = anchor(links, e["parent"])
-            b = bodies[e["parent"]].add_body(name=MJCF_NAME[name], pos=(a - pa) / 1000)
             lo, hi = np.radians(e["range_deg"])
-            b.add_joint(name=e["joint"], type=mujoco.mjtJoint.mjJNT_HINGE, axis=e["axis"], range=[lo, hi],
-                        damping=damping, armature=ARMATURE, frictionloss=FRICTION)
+            hinge = dict(type=mujoco.mjtJoint.mjJNT_HINGE, axis=e["axis"])
+            b = bodies[e["parent"]].add_body(name=MJCF_NAME[name], pos=(a - pa) / 1000)
+            if walk:
+                # servo joint, then the gearbox play hinge in series on the same axis (the USD converter splits
+                # them with a dummy body, as in Isaac Lab's MicroDuck backlash model); the trainer's servo model
+                # adds friction and damping
+                b.add_joint(name=e["joint"], range=[lo, hi], armature=bam["armature"], **hinge)
+                b.add_joint(name=f"passive_{e['joint']}_backlash", range=[-play, play], damping=0.01, **hinge)
+            else:
+                b.add_joint(name=e["joint"], range=[lo, hi], damping=damping, armature=ARMATURE,
+                            frictionloss=FRICTION, **hinge)
         bodies[name] = b
         items = []
         for part, link in MANIFEST.items():
@@ -115,7 +136,7 @@ def build(sv, servo_name, walk):
             mesh = trimesh.load(stl / (part + ".stl"))
             items.append(mesh_mass(mesh, density=PRINT_DENSITY))
             b.add_geom(name=part, type=mujoco.mjtGeom.mjGEOM_MESH, meshname=part, pos=-a / 1000, group=1,
-                       rgba=[0.85, 0.55, 0.2, 1], mass=0, **col)
+                       rgba=[0.85, 0.55, 0.2, 1], mass=0, **geom_col(name, None))
         for joint, s in LAYOUT["servos"].items():
             if s["link"] != name:
                 continue
@@ -126,7 +147,8 @@ def build(sv, servo_name, walk):
             q = np.zeros(4)
             mujoco.mju_mat2Quat(q, T[:3, :3].flatten())
             b.add_geom(name="servo_" + joint, type=mujoco.mjtGeom.mjGEOM_MESH, meshname="sts3215",
-                       pos=(T[:3, 3] - a) / 1000, quat=q, group=1, rgba=[0.15, 0.15, 0.15, 1], mass=0, **col)
+                       pos=(T[:3, 3] - a) / 1000, quat=q, group=1, rgba=[0.15, 0.15, 0.15, 1], mass=0,
+                       **geom_col(name, joint))
         if "payload" in e:
             pl = e["payload"]
             items.append(box_mass(pl["mass_g"] / 1000, pl["com_mm"], pl["size_mm"]))

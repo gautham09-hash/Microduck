@@ -28,34 +28,39 @@
     <body name="trunk_base" pos="0 0 0.165">
       <inertial pos="-0.0200415 3.09865e-06 -7.72533e-05" quat="0.380126 0.37781 -0.59887 0.595079" mass="0.338255" diaginertia="0.000293328 0.0002297 0.000219841"/>
       <joint name="floating_base" type="free"/>
-      <geom name="trunk" pos="0 0 -0.165" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="trunk"/>
-      <geom name="servo_left_hip_yaw" pos="-0.0047 0.02275 0.00595" quat="0 1 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
-      <geom name="servo_right_hip_yaw" pos="-0.0047 -0.02275 0.00595" quat="0 1 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
+      <geom name="trunk" pos="0 0 -0.165" quat="1 0 0 0" type="mesh" contype="8" conaffinity="4" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="trunk"/>
+      <geom name="servo_left_hip_yaw" pos="-0.0047 0.02275 0.00595" quat="0 1 0 0" type="mesh" contype="8" conaffinity="4" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
+      <geom name="servo_right_hip_yaw" pos="-0.0047 -0.02275 0.00595" quat="0 1 0 0" type="mesh" contype="8" conaffinity="4" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
       <site name="imu"/>
       <body name="yaw2roll" pos="0.0078 0.02275 -0.0155">
         <inertial pos="9.22522e-05 -0.000217354 -0.0275277" quat="0.70947 -0.0102608 0.0186233 0.704415" mass="0.0708349" diaginertia="2.24591e-05 2.08281e-05 1.18778e-05"/>
-        <joint name="left_hip_yaw" range="-0.523599 0.523599" armature="0.02" frictionloss="0.05" axis="0 0 -1"/>
+        <joint name="left_hip_yaw" range="-0.523599 0.523599" armature="0.0215643" axis="0 0 -1"/>
+        <joint name="passive_left_hip_yaw_backlash" range="-0.00872665 0.00872665" damping="0.01" axis="0 0 -1"/>
         <geom name="left_hip_yaw_bracket" pos="-0.0078 -0.02275 -0.1495" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="left_hip_yaw_bracket"/>
         <geom name="left_hip_yaw_cap" pos="-0.0078 -0.02275 -0.1495" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="left_hip_yaw_cap"/>
         <geom name="servo_left_hip_roll" pos="0 0 -0.02875" quat="0 0.707107 0 0.707107" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
         <body name="hip_l" pos="0.02145 0 -0.01625">
           <inertial pos="-0.0123298 0.0357717 -0.000180903" quat="0.541615 0.439137 -0.558188 0.449708" mass="0.00957763" diaginertia="7.19494e-06 5.6703e-06 2.24525e-06"/>
-          <joint name="left_hip_roll" range="-0.436332 0.436332" armature="0.02" frictionloss="0.05" axis="1 0 0"/>
+          <joint name="left_hip_roll" range="-0.436332 0.436332" armature="0.0215643" axis="1 0 0"/>
+          <joint name="passive_left_hip_roll_backlash" range="-0.00872665 0.00872665" damping="0.01" axis="1 0 0"/>
           <geom name="left_hip_cross" pos="-0.02925 -0.02275 -0.13325" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="left_hip_cross"/>
           <body name="upper_leg_left" pos="-0.02405 0.0325 0">
             <inertial pos="-0.0334412 0.0161983 -0.0070684" quat="0.591944 0.401253 0.425925 0.554244" mass="0.126794" diaginertia="7.97488e-05 7.54548e-05 2.96102e-05"/>
-            <joint name="left_hip_pitch" range="-1.5708 0.698132" armature="0.02" frictionloss="0.05" axis="0 1 0"/>
-            <geom name="left_thigh" pos="-0.0052 -0.05525 -0.13325" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="left_thigh"/>
-            <geom name="servo_left_hip_pitch" pos="-0.0125 0.01625 0" quat="0.707107 0.707107 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
-            <geom name="servo_left_knee" pos="-0.0507893 0.01625 -0.0168538" quat="0.579224 0.579224 0.405586 -0.405586" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
+            <joint name="left_hip_pitch" range="-1.5708 0.698132" armature="0.0215643" axis="0 1 0"/>
+            <joint name="passive_left_hip_pitch_backlash" range="-0.00872665 0.00872665" damping="0.01" axis="0 1 0"/>
+            <geom name="left_thigh" pos="-0.0052 -0.05525 -0.13325" quat="1 0 0 0" type="mesh" contype="4" conaffinity="8" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="left_thigh"/>
+            <geom name="servo_left_hip_pitch" pos="-0.0125 0.01625 0" quat="0.707107 0.707107 0 0" type="mesh" contype="4" conaffinity="8" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
+            <geom name="servo_left_knee" pos="-0.0507893 0.01625 -0.0168538" quat="0.579224 0.579224 0.405586 -0.405586" type="mesh" contype="4" conaffinity="8" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
             <body name="leg" pos="-0.04651 -0.0052 -0.0286">
               <inertial pos="-4.02943e-06 0.0163345 -0.0381294" quat="0.996943 -0.0781286 -1.69057e-06 2.09806e-06" mass="0.0670113" diaginertia="2.36217e-05 1.86537e-05 1.22982e-05"/>
-              <joint name="left_knee" range="-1.309 1.39626" armature="0.02" frictionloss="0.05" axis="0 -1 0"/>
+              <joint name="left_knee" range="-1.309 1.39626" armature="0.0215643" axis="0 -1 0"/>
+              <joint name="passive_left_knee_backlash" range="-0.00872665 0.00872665" damping="0.01" axis="0 -1 0"/>
               <geom name="left_shin" pos="0.04131 -0.05005 -0.10465" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="left_shin"/>
               <geom name="servo_left_ankle" pos="-4e-06 0.01495 -0.0421" quat="0.5 -0.5 0.5 0.5" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
               <body name="ankle_left" pos="0 0.0338 -0.0546">
                 <inertial pos="0.00807459 -0.0190148 -0.0287439" quat="-0.000497607 0.729501 -0.00529949 0.683959" mass="0.0303484" diaginertia="1.91886e-05 1.34155e-05 9.72636e-06"/>
-                <joint name="left_ankle" range="-0.698132 1.5708" armature="0.02" frictionloss="0.05" axis="0 1 0"/>
+                <joint name="left_ankle" range="-0.698132 1.5708" armature="0.0215643" axis="0 1 0"/>
+                <joint name="passive_left_ankle_backlash" range="-0.00872665 0.00872665" damping="0.01" axis="0 1 0"/>
                 <geom name="left_foot" pos="0.04131 -0.08385 -0.05005" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="left_foot"/>
                 <geom name="left_foot_sole" size="0.0351 0.02675 0.0015" pos="0.00911 -0.0191 -0.03405" type="box" contype="2" friction="1 0.02 0.01" rgba="0.2 0.2 0.2 1" mass="0"/>
                 <site name="left_foot_sole" pos="0.00911 -0.0191 -0.03405"/>
@@ -66,22 +71,26 @@
       </body>
       <body name="neck" pos="0.0338 0.01885 0.033148">
         <inertial pos="0.00651174 -0.0187738 0.0287093" quat="0.717454 -0.0800774 -0.0823595 0.687069" mass="0.125766" diaginertia="9.22674e-05 8.95219e-05 2.80005e-05"/>
-        <joint name="neck_pitch" range="-1.5708 1.0472" armature="0.02" frictionloss="0.05" axis="0 -1 0"/>
+        <joint name="neck_pitch" range="-1.5708 1.0472" armature="0.0215643" axis="0 -1 0"/>
+        <joint name="passive_neck_pitch_backlash" range="-0.00872665 0.00872665" damping="0.01" axis="0 -1 0"/>
         <geom name="neck" pos="-0.0338 -0.01885 -0.198148" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="neck"/>
         <geom name="servo_neck_pitch" pos="0.0108253 -0.01885 0.006248" quat="0.183015 -0.183015 0.683012 0.683012" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
         <geom name="servo_head_pitch" pos="0 -0.01885 0.052498" quat="-0.5 0.5 0.5 0.5" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
         <body name="neck_pitch" pos="0 0 0.065">
           <inertial pos="-4.69656e-10 -0.0183314 0.0133159" quat="0.706784 0.70743 -2.38896e-08 2.38592e-08" mass="0.0049534" diaginertia="2.04569e-06 1.67191e-06 7.25258e-07"/>
-          <joint name="head_pitch" range="-0.785398 1.5708" armature="0.02" frictionloss="0.05" axis="0 1 0"/>
+          <joint name="head_pitch" range="-0.785398 1.5708" armature="0.0215643" axis="0 1 0"/>
+          <joint name="passive_head_pitch_backlash" range="-0.00872665 0.00872665" damping="0.01" axis="0 1 0"/>
           <geom name="neck_top" pos="-0.0338 -0.01885 -0.263148" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="neck_top"/>
           <body name="yaw_roll_motion" pos="0 -0.01885 0.024301">
             <inertial pos="-0.00169202 -0.0150467 0.0187847" quat="0.716748 0.697279 -0.00735958 -0.00452369" mass="0.068458" diaginertia="1.93126e-05 1.83654e-05 1.22103e-05"/>
-            <joint name="head_yaw" range="-1.5708 1.5708" armature="0.02" frictionloss="0.05"/>
+            <joint name="head_yaw" range="-1.5708 1.5708" armature="0.0215643"/>
+            <joint name="passive_head_yaw_backlash" range="-0.00872665 0.00872665" damping="0.01"/>
             <geom name="head_yaw_link" pos="-0.0338 0 -0.287449" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="head_yaw_link"/>
             <geom name="servo_head_yaw" pos="0 -0.0125 0.018844" quat="0 0.707107 0.707107 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
             <body name="jaw_soft" pos="-0.02327 0 0.01885">
               <inertial pos="0.0315974 -0.000940804 0.00469367" quat="-0.0563681 0.693753 0.0463418 0.716507" mass="0.346087" diaginertia="0.000975555 0.000791345 0.000425997"/>
-              <joint name="head_roll" range="-0.436332 0.436332" armature="0.02" frictionloss="0.05" axis="-1 0 0"/>
+              <joint name="head_roll" range="-0.436332 0.436332" armature="0.0215643" axis="-1 0 0"/>
+              <joint name="passive_head_roll_backlash" range="-0.00872665 0.00872665" damping="0.01" axis="-1 0 0"/>
               <geom name="head" pos="-0.01053 0 -0.306299" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="head"/>
               <geom name="servo_head_roll" pos="-0.01885 -0.0125 -6e-06" quat="0.5 0.5 0.5 0.5" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
             </body>
@@ -90,28 +99,33 @@
       </body>
       <body name="bearing_roll" pos="0.0078 -0.02275 -0.0155">
         <inertial pos="9.22522e-05 0.000217353 -0.0275277" quat="0.704415 0.0186233 -0.0102609 0.70947" mass="0.0708349" diaginertia="2.24591e-05 2.08281e-05 1.18778e-05"/>
-        <joint name="right_hip_yaw" range="-0.523599 0.523599" armature="0.02" frictionloss="0.05" axis="0 0 -1"/>
+        <joint name="right_hip_yaw" range="-0.523599 0.523599" armature="0.0215643" axis="0 0 -1"/>
+        <joint name="passive_right_hip_yaw_backlash" range="-0.00872665 0.00872665" damping="0.01" axis="0 0 -1"/>
         <geom name="right_hip_yaw_bracket" pos="-0.0078 0.02275 -0.1495" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="right_hip_yaw_bracket"/>
         <geom name="right_hip_yaw_cap" pos="-0.0078 0.02275 -0.1495" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="right_hip_yaw_cap"/>
         <geom name="servo_right_hip_roll" pos="0 0 -0.02875" quat="0 0.707107 0 0.707107" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
         <body name="hip_l_2" pos="0.02145 0 -0.01625">
           <inertial pos="-0.0123299 -0.0357717 -0.000180903" quat="0.439137 0.541615 -0.449708 0.558188" mass="0.00957763" diaginertia="7.19494e-06 5.6703e-06 2.24525e-06"/>
-          <joint name="right_hip_roll" range="-0.436332 0.436332" armature="0.02" frictionloss="0.05" axis="1 0 0"/>
+          <joint name="right_hip_roll" range="-0.436332 0.436332" armature="0.0215643" axis="1 0 0"/>
+          <joint name="passive_right_hip_roll_backlash" range="-0.00872665 0.00872665" damping="0.01" axis="1 0 0"/>
           <geom name="right_hip_cross" pos="-0.02925 0.02275 -0.13325" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="right_hip_cross"/>
           <body name="upper_leg_right" pos="-0.02405 -0.0325 0">
             <inertial pos="-0.0334412 -0.0161983 -0.0070684" quat="0.554244 0.425925 0.401253 0.591944" mass="0.126794" diaginertia="7.97488e-05 7.54548e-05 2.96102e-05"/>
-            <joint name="right_hip_pitch" range="-0.698132 1.5708" armature="0.02" frictionloss="0.05" axis="0 -1 0"/>
-            <geom name="right_thigh" pos="-0.0052 0.05525 -0.13325" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="right_thigh"/>
-            <geom name="servo_right_hip_pitch" pos="-0.0125 -0.01625 0" quat="0.707107 -0.707107 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
-            <geom name="servo_right_knee" pos="-0.0507893 -0.01625 -0.0168538" quat="0.579224 -0.579224 0.405586 0.405586" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
+            <joint name="right_hip_pitch" range="-0.698132 1.5708" armature="0.0215643" axis="0 -1 0"/>
+            <joint name="passive_right_hip_pitch_backlash" range="-0.00872665 0.00872665" damping="0.01" axis="0 -1 0"/>
+            <geom name="right_thigh" pos="-0.0052 0.05525 -0.13325" quat="1 0 0 0" type="mesh" contype="4" conaffinity="8" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="right_thigh"/>
+            <geom name="servo_right_hip_pitch" pos="-0.0125 -0.01625 0" quat="0.707107 -0.707107 0 0" type="mesh" contype="4" conaffinity="8" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
+            <geom name="servo_right_knee" pos="-0.0507893 -0.01625 -0.0168538" quat="0.579224 -0.579224 0.405586 0.405586" type="mesh" contype="4" conaffinity="8" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
             <body name="leg_2" pos="-0.04651 0.0052 -0.0286">
               <inertial pos="-4.03817e-06 -0.0163345 -0.0381294" quat="0.996943 0.0781286 -2.30433e-06 -1.35159e-06" mass="0.0670113" diaginertia="2.36217e-05 1.86537e-05 1.22982e-05"/>
-              <joint name="right_knee" range="-1.39626 1.309" armature="0.02" frictionloss="0.05" axis="0 1 0"/>
+              <joint name="right_knee" range="-1.39626 1.309" armature="0.0215643" axis="0 1 0"/>
+              <joint name="passive_right_knee_backlash" range="-0.00872665 0.00872665" damping="0.01" axis="0 1 0"/>
               <geom name="right_shin" pos="0.04131 0.05005 -0.10465" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="right_shin"/>
               <geom name="servo_right_ankle" pos="-4e-06 -0.01495 -0.0421" quat="-0.5 -0.5 -0.5 0.5" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.15 0.15 0.15 1" mass="0" mesh="sts3215"/>
               <body name="ankle_right" pos="0 -0.0338 -0.0546">
                 <inertial pos="0.00807459 0.0190148 -0.0287439" quat="0.000497607 0.729501 0.00529949 0.683959" mass="0.0303484" diaginertia="1.91886e-05 1.34155e-05 9.72636e-06"/>
-                <joint name="right_ankle" range="-1.5708 0.698132" armature="0.02" frictionloss="0.05" axis="0 -1 0"/>
+                <joint name="right_ankle" range="-1.5708 0.698132" armature="0.0215643" axis="0 -1 0"/>
+                <joint name="passive_right_ankle_backlash" range="-0.00872665 0.00872665" damping="0.01" axis="0 -1 0"/>
                 <geom name="right_foot" pos="0.04131 0.08385 -0.05005" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.85 0.55 0.2 1" mass="0" mesh="right_foot"/>
                 <geom name="right_foot_sole" size="0.0351 0.02675 0.0015" pos="0.00911 0.0191 -0.03405" type="box" contype="2" friction="1 0.02 0.01" rgba="0.2 0.2 0.2 1" mass="0"/>
                 <site name="right_foot_sole" pos="0.00911 0.0191 -0.03405"/>
@@ -124,7 +138,7 @@
   </worldbody>
 
   <keyframe>
-    <key name="zero" qpos="0 0 0.1505 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/>
-    <key name="stand" qpos="0 0 0.165776 1 0 0 0 0 -0.0873 -0.4579 -0.0049 0.453 0.3491 0.3491 0 0 0 0.0873 0.4579 0.0049 -0.453"/>
+    <key name="zero" qpos="0 0 0.1505 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/>
+    <key name="stand" qpos="0 0 0.165776 1 0 0 0 0 0 -0.0873 0 -0.4579 0 -0.0049 0 0.453 0 0.3491 0 0.3491 0 0 0 0 0 0 0 0.0873 0 0.4579 0 0.0049 0 -0.453 0"/>
   </keyframe>
 </mujoco>

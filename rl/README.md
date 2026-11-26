@@ -10,10 +10,16 @@ It starts from Isaac Lab's MicroDuck walking task (same observations, actions an
 body and joint names) and changes what differs for this robot:
 
 - **Robot model:** `sim/sts3215/robot_walk.xml`, converted to USD.
-- **Servos:** DC-motor servos, 1.91 N·m stall and 5.45 rad/s no-load, from the label on the servo box.
+- **Servos:** Rhoban BAM's identified STS3215 model (`cad/sts3215/layout.json`, `servo.bam`), with the firmware's
+  limit on how fast its target moves (5.1 rad/s), a 10–40 ms command delay, a 2S battery's voltage range and sag,
+  ±0.5° gearbox play per joint, and the torque capped at the label's 1.91 N·m stall.
+- **Collisions:** the soles against the floor, and the thighs against the trunk and hip yaw servos. A thigh touching
+  the floor ends the episode (kneeling would otherwise collect the step-timing reward).
+- **Rewards:** added penalties on servo torque, joint acceleration and hard landings, and rewards for trunk height,
+  staying near the stand pose and keeping both feet down when told to stand.
 - **Commands:** slower, with forward speed −0.15 to 0.25 m/s, sideways ±0.1 m/s and turning ±0.6 rad/s.
 - **Gait:** foot lift and step timing scaled to the bigger robot.
-- **Randomization:** servo friction and gains, and trunk and head mass, since those are not measured yet.
+- **Randomization:** servo friction, and trunk and head mass, since those are not measured yet.
 
 ## Setup (Linux, NVIDIA GPU)
 
@@ -64,3 +70,34 @@ about 2 h. Checkpoints go to `~/IsaacLab/logs/rsl_rl/microduck_sts3215_flat/<run
 250 iterations.
 
 For a quick config check, add `--num_envs 64 --max_iterations 3`.
+
+## Watch training
+
+To follow a run in the Viser web viewer (port 8080), replay its newest checkpoint; newer checkpoints are swapped in
+as training saves them, without reconnecting:
+
+```bash
+tmux new -d -s md_replay "bash ~/microduck/rl/watch_replay.sh"
+```
+
+Open `http://<box>:8080`, or tunnel it: `ssh -N -L 8080:127.0.0.1:8080 <box>`. It shares the GPU and slows training
+by about 20 %. Stop it with `tmux kill-session -t md_replay`. To replay a given run, run `rl/live_replay.py` with
+`--checkpoint <path to model_N.pt>` (see the command in the script).
+
+## Evaluate and export
+
+Run the trained policy at fixed commands (stand, walk, back, sidestep, turn, arc), headless:
+
+```bash
+cd ~/IsaacLab && .venv/bin/python ~/microduck/rl/eval_policy.py --task Microduck-STS3215-Velocity-Flat --checkpoint latest
+```
+
+It prints speed tracking, posture, gait timing, action smoothness and servo use against the torque-speed envelope.
+Add `--robust` to run the training environment (random commands, noise, pushes) with 1,024 robots and count falls,
+or `--delay N` to apply every action N policy steps (20 ms each) late. It saves `eval/eval.npz` and
+`eval/traj.npz` in the run folder, and exports the policy to `exported/policy.onnx` (with `policy.onnx.data`) and
+`policy.pt`. The training model only collides at the soles, so check the recorded motions against the CAD:
+
+```bash
+uv run --with python-fcl python cad/sts3215/check_rom.py --traj <run>/eval/traj.npz
+```

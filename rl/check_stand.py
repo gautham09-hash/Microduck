@@ -17,12 +17,13 @@ cfg.commands.base_velocity.rel_standing_envs = 1.0
 env = gym.make(TASK, cfg=cfg)
 env.reset()
 robot = env.unwrapped.scene["robot"]
-stall = robot.cfg.actuators["servos"].saturation_effort
-peak = torch.zeros(robot.num_joints, device=env.unwrapped.device)
+stall = robot.cfg.actuators["servos"].actuator_effort_limit
+servos = [i for i, n in enumerate(robot.joint_names) if not n.startswith("passive_")]
+peak = torch.zeros(len(servos), device=env.unwrapped.device)
 steps = int(3.0 / env.unwrapped.step_dt)
 for i in range(steps):
     env.step(torch.zeros(env.action_space.shape, device=env.unwrapped.device))
-    tau = robot.data.applied_torque.torch if hasattr(robot.data.applied_torque, "torch") else robot.data.applied_torque
+    tau = robot.actuators.applied_effort.torch[:, servos]
     peak = torch.maximum(peak, tau.abs().max(0).values)
     if i in (0, steps // 2, steps - 1):
         pos = robot.data.root_pos_w.torch if hasattr(robot.data.root_pos_w, "torch") else robot.data.root_pos_w
@@ -30,7 +31,7 @@ for i in range(steps):
         g = g.torch if hasattr(g, "torch") else g
         tilt = torch.rad2deg(torch.acos((-g[:, 2]).clamp(-1, 1)))
         print(f"t={i * env.unwrapped.step_dt:4.2f}s trunk z {pos[:, 2].mean() * 1000:6.1f} mm, tilt {tilt.max():5.1f} deg")
-names = robot.joint_names
+names = [robot.joint_names[i] for i in servos]
 top = torch.argsort(peak, descending=True)[:4]
 print("mass", float(robot.data.default_mass.torch.sum(-1)[0]) if hasattr(robot.data.default_mass, "torch")
       else float(robot.data.default_mass.sum(-1)[0]), "kg")

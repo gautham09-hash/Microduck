@@ -94,6 +94,6 @@ position control. Peak torque in a 2 s crouch is 56 % of stall at the knees (19 
   clevis and one cradle and check them on a real servo before printing the set.
 - **Upper body unfinished.** Head shells, beak and mouth servo mount, trunk shell, battery holder, electronics
   mounts and cable routing are not designed.
-- **Sim servo constants are starting values.** Armature, friction and kp need a step-response measurement on a
-  real STS3215.
+- **Sim servo constants are starting values in `robot.xml`.** The training model uses Rhoban BAM's identified
+  STS3215 (one servo on a pendulum bench); a step-response measurement on our own servos would confirm it.
 - **Unfinished geometry.** No fillets or lightening; the foot plate is solid 6 mm.
